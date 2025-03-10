@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Battle</title>
+    <style>
+        body {
+
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .battle-container {
+            width: 800px;
+            height: 500px;
+            background-image: url('https://cdnjs.cloudflare.com/ajax/libs/browser-logos/35.1.0/archive/pokemon-go/pokemon-go.png');
+            background-size: cover;
+            background-position: center;
+
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .battle-ground {
+            width: 100%;
+            height: 100%;
+            background-color: rgb(223,225,218);
+        }
+
+        /* Pokémon Positions */
+        .my-pokemon {
+            position: absolute;
+            bottom: 80px;
+            left: 120px;
+            transform: scale(1.5);
+            z-index: 10;
+        }
+
+        .opponent-pokemon {
+            position: absolute;
+            top: 50px;
+            right: 80px;
+            transform: scale(1.5);
+            z-index: 10 ;
+        }
+
+        /* Health Bars */
+        .health-bar {
+            width: 200px;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .health-level {
+            height: 100%;
+            background-color: #4caf50;
+            transition: width 0.3s ease;
+        }
+
+        /* HP Displays */
+        .my-stats {
+            position: absolute;
+            bottom: 100px;
+            right: 50px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+            width: 250px;
+        }
+
+        .opponent-stats {
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+            width: 250px;
+        }
+
+        .pokemon-name {
+            font-weight: bold;
+            text-transform: capitalize;
+            margin-bottom: 5px;
+        }
+
+        .stat-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+
+        .action-div{
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            z-index: 10;
+        }
+        /* Action Menu */
+        .action-menu {
+            width: 40%;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .message-box {
+            width: 100%;
+            height: 50px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 18px;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .action-button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-button:hover {
+            transform: scale(1.05);
+        }
+
+        .fight {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .item {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .pokemon {
+            background-color: #2196f3;
+            color: white;
+        }
+
+        .run {
+            background-color: #ffc107;
+            color: black;
+        }
+
+        #box {
+            width: 800px;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+        }
+
+
+
+        .ovalOutter {
+            z-index: 1;
+            position:absolute;
+            top: 50px;
+            right: 10px;
+            width: 240px;
+            height: 130px;
+            background: rgb(200,200,176);
+            -moz-border-radius: 50% / 50%;
+            -webkit-border-radius: 50% / 50%;
+            border-radius: 50% / 50%;
+        }
+
+        .ovalInner {
+            position: absolute;
+            top: 65px;
+            right: 30px;
+            width: 200px;
+            height: 100px;
+            z-index: 4;
+            background: rgb(176,176,144);
+            -moz-border-radius: 50% / 50%;
+            -webkit-border-radius: 50% / 50%;
+            border-radius: 50% / 50%;
+        }
+
+        .ovaldownOutter {
+            z-index: 1;
+            position:absolute;
+            bottom: 40px;
+            left: 50px;
+            width: 240px;
+            height: 130px;
+            background: rgb(200,200,176);
+            -moz-border-radius: 50% / 50%;
+            -webkit-border-radius: 50% / 50%;
+            border-radius: 50% / 50%;
+        }
+
+        .ovaldownInner {
+            position: absolute;
+            bottom: 55px;
+            left: 70px;
+            width: 200px;
+            height: 100px;
+            z-index: 4;
+            background: rgb(176,176,144);
+            -moz-border-radius: 50% / 50%;
+            -webkit-border-radius: 50% / 50%;
+            border-radius: 50% / 50%;
+        }
+
+
+
+        .attack-animation-my {
+            animation: tackle-move-my 0.4s ease-in-out 1; /* 애니메이션 이름, 지속 시간, 타이밍 함수, 반복 횟수 설정 */
+        }
+
+        @keyframes tackle-move-my { /* keyframes 애니메이션 정의 */
+            0% {
+                transform: translateX(0) scale(1.5); /* 시작: 원래 위치 */
+            }
+            25% {
+                transform: translateX(30px) scale(1.5); /* 오른쪽으로 이동 */
+            }
+            75% {
+                transform: translateX(-10px) scale(1.5); /* 왼쪽으로 살짝 (반동) */
+            }
+            100% {
+                transform: translateX(0) scale(1.5); /* 종료: 원래 위치 */
+            }
+        }
+
+        /* 공격 애니메이션 (상대 포켓몬) - 몸통박치기: 왼쪽으로 살짝 왕복 */
+        .attack-animation-opponent {
+            animation: tackle-move-opponent 0.4s ease-in-out 1; /* 애니메이션 이름, 지속 시간, 타이밍 함수, 반복 횟수 설정 */
+        }
+
+        @keyframes tackle-move-opponent { /* keyframes 애니메이션 정의 */
+            0% {
+                transform: translateX(0) scale(1.5); /* 시작: 원래 위치 */
+            }
+            25% {
+                transform: translateX(-30px) scale(1.5); /* 왼쪽으로 이동 */
+            }
+            75% {
+                transform: translateX(10px) scale(1.5); /* 오른쪽으로 살짝 (반동) */
+            }
+            100% {
+                transform: translateX(0) scale(1.5); /* 종료: 원래 위치 */
+            }
+        }
+
+        #pokemonBtn{
+            width: 100px;
+            height: 50px;
+            margin-bottom: 40px;
+            background: yellowgreen;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <button id = "pokemonBtn">포켓몬 뽑기</button>
+</div>
+<div class="battle-container">
+    <div class="battle-ground">
+        <!-- Pokémon Sprites -->
+        <img src="" id="my-pokemon-sprite" class="my-pokemon" alt="My Pokémon">
+        <img src="" id="opponent-pokemon-sprite" class="opponent-pokemon" alt="Opponent Pokémon">
+        <div class="ovalInner"></div>
+        <div class="ovalOutter"></div>
+        <div class="ovaldownOutter"></div>
+        <div class="ovaldownInner"></div>
+
+        <!-- Stats Displays -->
+        <div class="opponent-stats">
+            <div class="pokemon-name" id="opponent-name">Loading...</div>
+            <div class="health-bar">
+                <div class="health-level" id="opponent-health" style="width: 100%;"></div>
+            </div>
+            <div class="stat-info">
+                <span>HP:</span>
+                <span id="opponent-hp-value">?/100</span>
+            </div>
+        </div>
+
+        <div class="my-stats">
+            <div class="pokemon-name" id="my-name">Loading...</div>
+            <div class="health-bar">
+                <div class="health-level" id="my-health" style="width: 100%;"></div>
+            </div>
+            <div class="stat-info">
+                <span>HP:</span>
+                <span id="my-hp-value">?/100</span>
+            </div>
+        </div>
+
+        <!-- Message Box -->
+
+        <div class="action-div">
+            <div class="message-box" id="message">
+                Wild Pokémon appeared!
+            </div>
+        </div>
+
+
+        <!-- Action Menu -->
+
+    </div>
+
+</div>
+<div id = "box">
+    <div class="action-menu" id="action-menu">
+        <div class="action-buttons">
+            <button class="action-button fight" onclick="handleFightSkill()">FIGHT</button>
+            <button class="action-button item">BAG</button>
+            <button class="action-button pokemon">POKÉMON</button>
+            <button class="action-button run">RUN</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const actionMenu = document.getElementById('action-menu');
+
+    function onFightClick(event) {
+        handleFightAction(skills[event.target.dataset.index]); // 버튼의 data-index 속성 이용
+    }
+
+    let skills = []
+
+    function resetButtons() {
+        const buttons = document.querySelectorAll(".action-button");
+        const defaultButtons = ["FIGHT", "BAG", "POKÉMON", "RUN"];
+
+        buttons.forEach((button, index) => {
+            button.innerText = defaultButtons[index];
+            button.removeEventListener("click", onFightClick);
+        });
+
+
+    }
+
+    function handleFightSkill() {
+        const buttons = document.querySelectorAll(".action-button");
+
+        // 변경할 기술 이름 배열
+
+        buttons.forEach((button, index) => {
+            button.dataset.index = index;
+            button.innerText = skills[index];
+            button.addEventListener("click", onFightClick); // 클릭 시 원상태 복구
+        })
+    }
+
+    function handleFightAction(skill) {
+        actionMenu.style.display = 'none';
+        resetButtons();
+        // **1. 애니메이션 효과**
+        animateMyPokemonAttack(); // 공격 애니메이션 함수 호출
+
+        // **2. 공격 메시지 표시**
+         // 기술 이름은 추후 선택 기능 추가 시 변경
+        message.textContent = `${battleData.my_name.toUpperCase()} used ${skill}`;
+
+        // **3. 데미지 계산 (임시: 10 데미지)**
+        const damage = Math.ceil(battleData.my_attack/10); // 임시 데미지 값 (추후 계산 로직 추가)
+        battleData.other_hp -= damage; // 상대 포켓몬 HP 감소
+
+        if (battleData.other_hp < 0) {
+            battleData.other_hp = 0; // HP가 0 미만이 되지 않도록 보정
+        }
+
+        // **4. HP bar 및 HP text 업데이트**
+        updateOpponentHealthBar(); // HP bar 업데이트 함수 호출
+        opponentHpValue.textContent = `${battleData.other_hp} / ${battleData.other_hp_max}`; // HP text 업데이트
+
+        // **5. 배틀 종료 판정 (HP 0 이하)**
+        if (battleData.other_hp <= 0) {
+            message.textContent = `${battleData.other_name.toUpperCase()} fainted! ${battleData.my_name.toUpperCase()} won!`;
+            // (필요하다면) 승리 후 처리: 경험치 획득, 다음 전투 시작 등
+        } else {
+            // **6. 상대방 턴 시작 (일단 2초 후에 메시지만 표시)**
+            setTimeout(() => {
+                let random = Math.floor(Math.random() * 4) + 1;
+                message.textContent = `${battleData.other_name.toUpperCase()} used ${battleData[`other_skill${random}`]}!`;
+                // 메시지 변경
+                animateOpponentPokemonAttack();
+                const otherdamage = Math.ceil(battleData.other_attack/10);
+                battleData.my_hp -= otherdamage;
+                if (battleData.my_hp < 0) {
+                    battleData.my_hp = 0; // HP가 0 미만이 되지 않도록 보정
+                }
+
+                updateMyHealthBar();
+                myHpValue.textContent = `${battleData.my_hp} / ${battleData.my_hp_max}`; // HP text 업데이트
+
+                if (battleData.my_hp <= 0) {
+                    message.textContent = `${battleData.my_name.toUpperCase()} fainted! ${battleData.other_name.toUpperCase()} won!`;
+                }
+                else{
+                    actionMenu.style.display = 'block';
+                }
+
+            }, 1500); // 2초 후에 상대방 턴 시작 (실제 턴 기반 로직은 추후 구현)
+
+
+        }
+    }
+
+    // 공격 애니메이션 함수 (추가) - 간단한 움직임 애니메이션 예시
+    function animateMyPokemonAttack() {
+        const myPokemonSprite = document.getElementById('my-pokemon-sprite');
+        myPokemonSprite.classList.add('attack-animation-my'); // 내 포켓몬 공격 애니메이션 CSS 클래스 추가
+
+        // 애니메이션 종료 후 클래스 제거 (transitionend 이벤트 리스너 사용)
+        myPokemonSprite.addEventListener('animationend', function() {
+            myPokemonSprite.classList.remove('attack-animation-my'); // 애니메이션 클래스 제거
+        }, { once: true });
+    }
+
+    function animateOpponentPokemonAttack() {
+        const opponentPokemonSprite = document.getElementById('opponent-pokemon-sprite');
+        opponentPokemonSprite.classList.add('attack-animation-opponent'); // 상대 포켓몬 공격 애니메이션 CSS 클래스 추가
+
+        // 애니메이션 종료 후 클래스 제거 (transitionend 이벤트 리스너 사용)
+        opponentPokemonSprite.addEventListener('animationend', function() {
+            opponentPokemonSprite.classList.remove('attack-animation-opponent'); // 애니메이션 클래스 제거
+        }, { once: true });
+    }
+
+    // 상대방 HP bar 업데이트 함수 (추가)
+    function updateOpponentHealthBar() {
+        const opponentHealthBar = document.getElementById('opponent-health');
+        const healthPercentage = (battleData.other_hp / battleData.other_hp_max) * 100; // HP 퍼센트 계산
+        opponentHealthBar.style.width = `${healthPercentage}%`; // HP bar width 스타일 변경
+
+        // HP bar 색상 변경 (선택 사항) - HP 상태에 따라 색깔 다르게 표시 가능
+        if (healthPercentage <= 20) {
+            opponentHealthBar.style.backgroundColor = '#ff5722'; // 위험 (빨간색)
+        } else if (healthPercentage <= 50) {
+            opponentHealthBar.style.backgroundColor = '#ff9800'; // 주의 (주황색)
+        } else {
+            opponentHealthBar.style.backgroundColor = '#4caf50'; // 정상 (녹색)
+        }
+    }
+
+    function updateMyHealthBar() {
+        const myHealthBar = document.getElementById('my-health');
+        const healthPercentage = (battleData.my_hp / battleData.my_hp_max) * 100; // HP 퍼센트 계산
+        myHealthBar.style.width = `${healthPercentage}%`; // HP bar width 스타일 변경
+
+        // HP bar 색상 변경 (선택 사항) - HP 상태에 따라 색깔 다르게 표시 가능
+        if (healthPercentage <= 20) {
+            myHealthBar.style.backgroundColor = '#ff5722'; // 위험 (빨간색)
+        } else if (healthPercentage <= 50) {
+            myHealthBar.style.backgroundColor = '#ff9800'; // 주의 (주황색)
+        } else {
+            myHealthBar.style.backgroundColor = '#4caf50'; // 정상 (녹색)
+        }
+    }
+    // 서버에서 받은 데이터라고 가정 (실제로는 API 호출 결과를 사용)
+    let battleData = {
+        "my_name": "pikachu",
+        "my_image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/25.png",  // 실제 이미지 URL
+        "my_hp": 35,
+        "my_attack": 55,
+        "my_defense": 40,
+        "my_special_attack": 50,
+        "my_special_defense": 50,
+        "my_speed": 90,
+        "my_skill1" : "swift",
+        "my_skill2" : "bide",
+        "my_skill3" : "thunder-punch",
+        "my_skill4" : "fury-swipes",
+
+        "other_name": "charmander",
+        "other_image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png", // 실제 이미지 URL
+        "other_hp": 39,
+        "other_attack": 52,
+        "other_defense": 43,
+        "other_special_attack": 60,
+        "other_special_defense": 50,
+        "other_speed": 65,
+        "other_skill1" : "ember",
+        "other_skill2" : "leer",
+        "other_skill3" : "take-down",
+        "other_skill4" : "wing-attack",
+    };
+
+    // DOM 요소
+    const myPokemonSprite = document.getElementById('my-pokemon-sprite');
+    const opponentPokemonSprite = document.getElementById('opponent-pokemon-sprite');
+    const myName = document.getElementById('my-name');
+    const opponentName = document.getElementById('opponent-name');
+    const myHealth = document.getElementById('my-health');
+    const opponentHealth = document.getElementById('opponent-health');
+    const myHpValue = document.getElementById('my-hp-value');
+    const opponentHpValue = document.getElementById('opponent-hp-value');
+    const message = document.getElementById('message');
+
+    // 데이터 로딩 함수 (실제로는 fetch API 등으로 데이터를 가져옴)
+    function loadBattleData() {
+        // 플레이스홀더 이미지로 대체 (실제로는 API에서 받은 이미지 URL 사용)
+        myPokemonSprite.src = battleData.my_image; // 피카츄 뒷모습
+        opponentPokemonSprite.src = battleData.other_image; // 파이리 앞모습
+
+        // 포켓몬 이름 설정
+        myName.textContent = battleData.my_name;
+        opponentName.textContent = battleData.other_name;
+
+        // HP 설정
+        myHpValue.textContent = `${battleData.my_hp}/${battleData.my_hp}`;
+        opponentHpValue.textContent = `${battleData.other_hp}/${battleData.other_hp}`;
+
+        battleData.my_hp_max = battleData.my_hp; // HP 최대값 속성 추가
+        battleData.other_hp_max = battleData.other_hp; // HP 최대값 속성 추가
+
+        // 시작 메시지
+        message.textContent = `Wild ${battleData.other_name.toUpperCase()} appeared!`;
+
+        // 3초 후 액션 메뉴 표시
+        setTimeout(() => {
+            message.textContent = "What will you do?";
+            document.getElementById('action-menu').style.display = 'block';
+        }, 2000);
+    }
+    document.getElementById("pokemonBtn").addEventListener("click", function() {
+        // Generate two random numbers (you can adjust the range as needed)
+        let myNumber = Math.floor(Math.random() * 152) + 1;  // Random number between 1 and 100
+        let otherNumber = Math.floor(Math.random() * 152) + 1;  // Random number between 1 and 100
+
+        // Construct the query string
+        let param = `my=${myNumber}&other=${otherNumber}`;
+
+        // Reload the page with the new query string in the URL
+        window.location.search = param;
+    })
+
+
+    // 페이지 로드 시 데이터 로딩
+    document.addEventListener('DOMContentLoaded', function() {
+        // URL 파라미터 확인
+        const urlParams = new URLSearchParams(window.location.search);
+        const myParam = urlParams.get('my');
+        const otherParam = urlParams.get('other');
+        if (myParam && otherParam) { // my, other 파라미터 둘 다 존재
+            // API 호출 URL 생성 (Servlet 엔드포인트 주소에 맞춰 수정 필요)
+            const apiUrl = `./api?my=${myParam}&other=${otherParam}`; // '/your-servlet-context-path/battle' 부분을 실제 Servlet URL 패턴으로 변경
+            fetch(apiUrl) // fetch API 로 Servlet 호출
+                .then(response => response.json()) // 응답을 JSON 으로 파싱
+                .then(apiData => {
+                    // API 데이터로 battleData 교체 (가정: API 응답 JSON 구조가 battleData 와 유사)
+                    battleData = apiData; // **battleData 를 API 응답 데이터로 덮어쓰기**
+                    loadBattleData(); // UI 업데이트 (API 데이터 사용)
+                    skills = [battleData.my_skill1, battleData.my_skill2, battleData.my_skill3, battleData.my_skill4];
+                })
+                .catch(error => { // API 호출 실패 (네트워크 에러, 서버 에러 등)
+                    console.error('API 호출 에러:', error);
+                    loadBattleData(); // 에러 발생 시 기본 battleData 사용 (또는 에러 메시지 표시)
+                    alert('API 데이터 로딩에 실패했습니다. 기본 데이터를 사용합니다.'); // 사용자에게 알림 (선택 사항)
+                });
+
+        } else { // my 또는 other 파라미터가 하나라도 없거나 둘 다 없는 경우
+            loadBattleData(); // 기본 battleData 사용
+            skills = [battleData.my_skill1, battleData.my_skill2, battleData.my_skill3, battleData.my_skill4];
+        }
+
+
+
+
+    });
+
+    // 실제 앱에서는 여기에 턴 기반 전투 로직을 추가
+</script>
+</body>
+</html>
