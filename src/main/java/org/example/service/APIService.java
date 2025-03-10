@@ -10,9 +10,7 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class APIService {
     private static final APIService instance = new APIService();
@@ -69,8 +67,11 @@ public class APIService {
         map.put("my_special_defense", myStats.getSpecialDefense());
         map.put("my_speed", myStats.getSpeed());
 
+        List<Pokemon.MoveWrapper> shuffledmyMoves = new ArrayList<>(myPokemon.moves);
+        Collections.shuffle(shuffledmyMoves);
+
         for (int i = 1; i<5; i++) {
-            map.put("my_skill%s".formatted(Integer.toString(i)), myPokemon.moves.get(i).move.name);
+            map.put("my_skill%s".formatted(Integer.toString(i)), shuffledmyMoves.get(i).move.name);
         }
         // 상대 포켓몬 정보
         map.put("other_name", otherPokemon.name);
@@ -84,8 +85,11 @@ public class APIService {
         map.put("other_special_defense", otherStats.getSpecialDefense());
         map.put("other_speed", otherStats.getSpeed());
 
+        List<Pokemon.MoveWrapper> shuffledMoves = new ArrayList<>(otherPokemon.moves);
+        Collections.shuffle(shuffledMoves);
+
         for (int i = 1; i<5; i++) {
-            map.put("other_skill%s".formatted(Integer.toString(i)), otherPokemon.moves.get(i).move.name);
+            map.put("other_skill%s".formatted(Integer.toString(i)), shuffledMoves.get(i).move.name);
         }
 
         // JSON 변환하여 반환
