@@ -10,6 +10,18 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Pokemon{
 
+    public List<TypeWrapper> types; // moves는 List 형태로 선언해야 함
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class TypeWrapper {
+        public Type type;  // 실제 move 데이터를 감싸는 클래스
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Type {
+        public String name;
+    }
+
     public List<MoveWrapper> moves; // moves는 List 형태로 선언해야 함
 
     @JsonIgnoreProperties(ignoreUnknown = true)

@@ -273,6 +273,79 @@
             margin-bottom: 40px;
             background: yellowgreen;
         }
+
+        .normal {
+            background-color: #A8A878;
+        }
+
+        .fire {
+            background-color: #F08030;
+        }
+
+        .water {
+            background-color: #6890F0;
+        }
+
+        .electric {
+            background-color: #F8D030;
+        }
+
+        .grass {
+            background-color: #78C850;
+        }
+
+        .ice {
+            background-color: #98D8D8;
+        }
+
+        .fighting {
+            background-color: #C03028;
+        }
+
+        .poison {
+            background-color: #A040A0;
+        }
+
+        .ground {
+            background-color: #E0C068;
+        }
+
+        .flying {
+            background-color: #A890F0;
+        }
+
+        .psychic {
+            background-color: #F85888;
+        }
+
+        .bug {
+            background-color: #A8B820;
+        }
+
+        .rock {
+            background-color: #B8A038;
+        }
+
+        .ghost {
+            background-color: #705898;
+        }
+
+        .dragon {
+            background-color: #7038F8;
+        }
+
+        .dark {
+            background-color: #705848;
+        }
+
+        .steel {
+            background-color: #B8B8D0;
+        }
+
+        .fairy {
+            background-color: #EE99AC;
+        }
+
     </style>
 </head>
 <body>
@@ -329,19 +402,139 @@
 <div id = "box">
     <div class="action-menu" id="action-menu">
         <div class="action-buttons">
-            <button class="action-button fight" onclick="handleFightSkill()">FIGHT</button>
-            <button class="action-button item">BAG</button>
-            <button class="action-button pokemon">POKÉMON</button>
-            <button class="action-button run">RUN</button>
+            <button class="action-button fire" onclick="handleFightSkill()">FIGHT</button>
+            <button class="action-button grass">BAG</button>
+            <button class="action-button water">POKÉMON</button>
+            <button class="action-button dragon">RUN</button>
         </div>
     </div>
 </div>
 
 <script>
+
+    function calculateMyDamage(index, move) {
+        // 레벨은 보통 50으로 가정 (공식 대회 기준)
+        const level = 10;
+
+        // 물리공격인지 특수공격인지 확인
+        // 일반적으로 불꽃, 물, 전기 등은 특수공격, 노말, 격투 등은 물리공격
+        const isPhysical = isPhysicalMove(battleData[`my_skill${index}_type`]);
+
+        // 공격력과 방어력 결정
+        const attack = isPhysical ? battleData.my_attack : battleData.my_special_attack;
+        const defense = isPhysical ? battleData.other_defense : battleData.other_special_defense;
+
+        // 타입 상성 계산 (간단한 버전)
+        const typeEffectiveness = calculateTypeEffectiveness(battleData[`my_skill${index}_type`], battleData.other_type);
+
+        // STAB(Same Type Attack Bonus) - 자기 타입과 일치하는 공격은 1.5배 데미지
+        const stab = (battleData[`my_skill${index}_type`] === battleData.my_type) ? 1.5 : 1.0;
+
+        // 난수 요소 (0.85~1.0)
+        const random = 0.85 + Math.random() * 0.15;
+
+        // 데미지 계산 공식
+        let damage = Math.floor(((2 * level / 5 + 2) * move.power * attack / defense / 50 + 2)
+            * stab * typeEffectiveness * random);
+
+        return Math.max(1, damage); // 최소 1의 데미지는 보장
+    }
+
+    function calculateOtherDamage(index, move) {
+        // 레벨은 보통 50으로 가정 (공식 대회 기준)
+        const level = 10;
+
+        // 물리공격인지 특수공격인지 확인
+        // 일반적으로 불꽃, 물, 전기 등은 특수공격, 노말, 격투 등은 물리공격
+        const isPhysical = isPhysicalMove(battleData[`other_skill${index}_type`]);
+
+        // 공격력과 방어력 결정
+        const attack = isPhysical ? battleData.other_attack : battleData.other_special_attack;
+        const defense = isPhysical ? battleData.my_defense : battleData.my_special_defense;
+
+        // 타입 상성 계산 (간단한 버전)
+        const typeEffectiveness = calculateTypeEffectiveness(battleData[`other_skill${index}_type`], battleData.my_type);
+
+        // STAB(Same Type Attack Bonus) - 자기 타입과 일치하는 공격은 1.5배 데미지
+        const stab = (battleData[`other_skill${index}_type`] === battleData.other_type) ? 1.5 : 1.0;
+
+        // 난수 요소 (0.85~1.0)
+        const random = 0.85 + Math.random() * 0.15;
+
+        // 데미지 계산 공식
+        let damage = Math.floor(((2 * level / 5 + 2) * move.power * attack / defense / 50 + 2)
+            * stab * typeEffectiveness * random);
+
+        return Math.max(1, damage); // 최소 1의 데미지는 보장
+    }
+
+    // 물리 타입인지 확인하는 함수 (간단한 구현)
+    function isPhysicalMove(type) {
+        const physicalTypes = ['normal', 'fighting', 'ground', 'rock', 'bug', 'ghost', 'poison', 'steel'];
+        return physicalTypes.includes(type);
+    }
+
+    // 타입 상성 계산 함수 (간단한 구현)
+    function calculateTypeEffectiveness(moveType, defenderType) {
+        // 실제로는 더 복잡한 타입 차트가 있음
+        const typeChart = {
+            'normal': { 'rock': 0.5, 'ghost': 0, 'steel': 0.5 },
+            'fire': { 'fire': 0.5, 'water': 0.5, 'grass': 2, 'ice': 2, 'bug': 2, 'rock': 0.5, 'dragon': 0.5, 'steel': 2 },
+            'water': { 'fire': 2, 'water': 0.5, 'grass': 0.5, 'ground': 2, 'rock': 2, 'dragon': 0.5 },
+            'electric': { 'water': 2, 'electric': 0.5, 'grass': 0.5, 'ground': 0, 'flying': 2, 'dragon': 0.5 },
+            'grass': { 'fire': 0.5, 'water': 2, 'grass': 0.5, 'poison': 0.5, 'ground': 2, 'flying': 0.5, 'bug': 0.5, 'rock': 2, 'dragon': 0.5, 'steel': 0.5 },
+            'ice': { 'fire': 0.5, 'water': 0.5, 'grass': 2, 'ice': 0.5, 'ground': 2, 'flying': 2, 'dragon': 2, 'steel': 0.5 },
+            'fighting': { 'normal': 2, 'ice': 2, 'poison': 0.5, 'flying': 0.5, 'psychic': 0.5, 'bug': 0.5, 'rock': 2, 'ghost': 0, 'dark': 2, 'steel': 2, 'fairy': 0.5 },
+            'poison': { 'grass': 2, 'poison': 0.5, 'ground': 0.5, 'rock': 0.5, 'ghost': 0.5, 'steel': 0, 'fairy': 2 },
+            'ground': { 'fire': 2, 'electric': 2, 'grass': 0.5, 'poison': 2, 'flying': 0, 'bug': 0.5, 'rock': 2, 'steel': 2 },
+            'flying': { 'electric': 0.5, 'grass': 2, 'fighting': 2, 'bug': 2, 'rock': 0.5, 'steel': 0.5 },
+            'psychic': { 'fighting': 2, 'poison': 2, 'psychic': 0.5, 'dark': 0, 'steel': 0.5 },
+            'bug': { 'fire': 0.5, 'grass': 2, 'fighting': 0.5, 'poison': 0.5, 'flying': 0.5, 'psychic': 2, 'ghost': 0.5, 'dark': 2, 'steel': 0.5, 'fairy': 0.5 },
+            'rock': { 'fire': 2, 'ice': 2, 'fighting': 0.5, 'ground': 0.5, 'flying': 2, 'bug': 2, 'steel': 0.5 },
+            'ghost': { 'normal': 0, 'psychic': 2, 'ghost': 2, 'dark': 0.5 },
+            'dragon': { 'dragon': 2, 'steel': 0.5, 'fairy': 0 },
+            'dark': { 'fighting': 0.5, 'psychic': 2, 'ghost': 2, 'dark': 0.5, 'fairy': 0.5 },
+            'steel': { 'fire': 0.5, 'water': 0.5, 'electric': 0.5, 'ice': 2, 'rock': 2, 'steel': 0.5, 'fairy': 2 },
+            'fairy': { 'fire': 0.5, 'fighting': 2, 'poison': 0.5, 'dragon': 2, 'dark': 2, 'steel': 0.5 }
+        };
+
+        if (typeChart[moveType] && typeChart[moveType][defenderType]) {
+            return typeChart[moveType][defenderType];
+        }
+
+        return 1.0; // 특별한 상성이 없으면 보통 데미지
+    }
+
+    // 사용 예시
+    function attackPokemon(index) {
+        const move = {
+            name: battleData[`my_skill${index}_name`],
+            power: battleData[`my_skill${index}_power`],
+            type: battleData[`my_skill${index}_type`]
+        };
+        const damage = calculateMyDamage(index, move);
+        console.log(damage);
+        // HP 감소
+        battleData.other_hp = Math.max(0, battleData.other_hp - damage);
+    }
+
+    function defendPokemon(index){
+        const move = {
+            name: battleData[`other_skill${index}_name`],
+            power: battleData[`other_skill${index}_power`],
+            type: battleData[`other_skill${index}_type`]
+        };
+
+        const damage = calculateOtherDamage(index, move);
+        console.log(damage);
+        // HP 감소
+        battleData.my_hp = Math.max(0, battleData.my_hp - damage);
+    }
+
     const actionMenu = document.getElementById('action-menu');
 
     function onFightClick(event) {
-        handleFightAction(skills[event.target.dataset.index]); // 버튼의 data-index 속성 이용
+        handleFightAction(skills[event.target.dataset.index], event.target.dataset.index); // 버튼의 data-index 속성 이용
     }
 
     let skills = []
@@ -349,13 +542,13 @@
     function resetButtons() {
         const buttons = document.querySelectorAll(".action-button");
         const defaultButtons = ["FIGHT", "BAG", "POKÉMON", "RUN"];
+        const styleButtons = ["fire", "grass", "water", "dragon"]
 
         buttons.forEach((button, index) => {
             button.innerText = defaultButtons[index];
+            button.className = `action-button ${styleButtons[index]}`;
             button.removeEventListener("click", onFightClick);
         });
-
-
     }
 
     function handleFightSkill() {
@@ -365,12 +558,13 @@
 
         buttons.forEach((button, index) => {
             button.dataset.index = index;
+            button.className = `action-button ${battleData[`my_skill${index+ 1}_type`]}`;
             button.innerText = skills[index];
             button.addEventListener("click", onFightClick); // 클릭 시 원상태 복구
         })
     }
 
-    function handleFightAction(skill) {
+    function handleFightAction(skill, index) {
         actionMenu.style.display = 'none';
         resetButtons();
         // **1. 애니메이션 효과**
@@ -381,8 +575,7 @@
         message.textContent = `${battleData.my_name.toUpperCase()} used ${skill}`;
 
         // **3. 데미지 계산 (임시: 10 데미지)**
-        const damage = Math.ceil(battleData.my_attack/10); // 임시 데미지 값 (추후 계산 로직 추가)
-        battleData.other_hp -= damage; // 상대 포켓몬 HP 감소
+        attackPokemon(parseInt(index)+1) // 상대 포켓몬 HP 감소
 
         if (battleData.other_hp < 0) {
             battleData.other_hp = 0; // HP가 0 미만이 되지 않도록 보정
@@ -400,11 +593,10 @@
             // **6. 상대방 턴 시작 (일단 2초 후에 메시지만 표시)**
             setTimeout(() => {
                 let random = Math.floor(Math.random() * 4) + 1;
-                message.textContent = `${battleData.other_name.toUpperCase()} used ${battleData[`other_skill${random}`]}!`;
+                message.textContent = `${battleData.other_name.toUpperCase()} used ${battleData[`other_skill${random}_name`]}!`;
                 // 메시지 변경
+                defendPokemon(random)
                 animateOpponentPokemonAttack();
-                const otherdamage = Math.ceil(battleData.other_attack/10);
-                battleData.my_hp -= otherdamage;
                 if (battleData.my_hp < 0) {
                     battleData.my_hp = 0; // HP가 0 미만이 되지 않도록 보정
                 }
@@ -481,17 +673,38 @@
         "my_name": "pikachu",
         "my_image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/25.png",  // 실제 이미지 URL
         "my_hp": 35,
+        "my_type" : "electric",
         "my_attack": 55,
         "my_defense": 40,
         "my_special_attack": 50,
         "my_special_defense": 50,
         "my_speed": 90,
-        "my_skill1" : "swift",
-        "my_skill2" : "bide",
-        "my_skill3" : "thunder-punch",
-        "my_skill4" : "fury-swipes",
+        "my_skill1_name": "swift",
+        "my_skill1_power": 60,
+        "my_skill1_accuracy": 100,
+        "my_skill1_pp": 20,
+        "my_skill1_type": "normal",
+
+        "my_skill2_name": "bide",
+        "my_skill2_power": 0,
+        "my_skill2_accuracy": 100,
+        "my_skill2_pp": 10,
+        "my_skill2_type": "normal",
+
+        "my_skill3_name": "thunder-punch",
+        "my_skill3_power": 75,
+        "my_skill3_accuracy": 100,
+        "my_skill3_pp": 15,
+        "my_skill3_type": "electric",
+
+        "my_skill4_name": "fury-swipes",
+        "my_skill4_power": 18,
+        "my_skill4_accuracy": 80,
+        "my_skill4_pp": 15,
+        "my_skill4_type": "normal",
 
         "other_name": "charmander",
+        "other_type" : "fire",
         "other_image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png", // 실제 이미지 URL
         "other_hp": 39,
         "other_attack": 52,
@@ -499,10 +712,29 @@
         "other_special_attack": 60,
         "other_special_defense": 50,
         "other_speed": 65,
-        "other_skill1" : "ember",
-        "other_skill2" : "leer",
-        "other_skill3" : "take-down",
-        "other_skill4" : "wing-attack",
+        "other_skill1_name": "ember",
+        "other_skill1_power": 40,
+        "other_skill1_accuracy": 100,
+        "other_skill1_pp": 25,
+        "other_skill1_type": "fire",
+
+        "other_skill2_name": "leer",
+        "other_skill2_power": 0,
+        "other_skill2_accuracy": 100,
+        "other_skill2_pp": 30,
+        "other_skill2_type": "normal",
+
+        "other_skill3_name": "take-down",
+        "other_skill3_power": 90,
+        "other_skill3_accuracy": 85,
+        "other_skill3_pp": 20,
+        "other_skill3_type": "normal",
+
+        "other_skill4_name": "wing-attack",
+        "other_skill4_power": 60,
+        "other_skill4_accuracy": 100,
+        "other_skill4_pp": 35,
+        "other_skill4_type": "flying"
     };
 
     // DOM 요소
@@ -570,7 +802,7 @@
                     // API 데이터로 battleData 교체 (가정: API 응답 JSON 구조가 battleData 와 유사)
                     battleData = apiData; // **battleData 를 API 응답 데이터로 덮어쓰기**
                     loadBattleData(); // UI 업데이트 (API 데이터 사용)
-                    skills = [battleData.my_skill1, battleData.my_skill2, battleData.my_skill3, battleData.my_skill4];
+                    skills = [battleData.my_skill1_name, battleData.my_skill2_name, battleData.my_skill3_name, battleData.my_skill4_name];
                 })
                 .catch(error => { // API 호출 실패 (네트워크 에러, 서버 에러 등)
                     console.error('API 호출 에러:', error);
@@ -580,7 +812,7 @@
 
         } else { // my 또는 other 파라미터가 하나라도 없거나 둘 다 없는 경우
             loadBattleData(); // 기본 battleData 사용
-            skills = [battleData.my_skill1, battleData.my_skill2, battleData.my_skill3, battleData.my_skill4];
+            skills = [battleData.my_skill1_name, battleData.my_skill2_name, battleData.my_skill3_name, battleData.my_skill4_name];
         }
 
 
