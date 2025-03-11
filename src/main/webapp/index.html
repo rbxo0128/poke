@@ -6,8 +6,7 @@
     <title>Pokémon Battle</title>
     <style>
         body {
-
-            font-family: 'Arial', sans-serif;
+            font-family: Arial, serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 0;
@@ -355,8 +354,8 @@
 <div class="battle-container">
     <div class="battle-ground">
         <!-- Pokémon Sprites -->
-        <img src="" id="my-pokemon-sprite" class="my-pokemon" alt="My Pokémon">
-        <img src="" id="opponent-pokemon-sprite" class="opponent-pokemon" alt="Opponent Pokémon">
+        <img src="" id="my-pokemon-sprite" class="my-pokemon">
+        <img src="" id="opponent-pokemon-sprite" class="opponent-pokemon">
         <div class="ovalInner"></div>
         <div class="ovalOutter"></div>
         <div class="ovaldownOutter"></div>
@@ -389,7 +388,7 @@
 
         <div class="action-div">
             <div class="message-box" id="message">
-                Wild Pokémon appeared!
+                야생 포켓몬이 나타났다.
             </div>
         </div>
 
@@ -437,7 +436,24 @@
         let damage = Math.floor(((2 * level / 5 + 2) * move.power * attack / defense / 50 + 2)
             * stab * typeEffectiveness * random);
 
-        return Math.max(1, damage); // 최소 1의 데미지는 보장
+        let effectMessage = "";
+        if (typeEffectiveness > 1.5) {
+            effectMessage = "효과가 굉장했다!";
+        } else if (typeEffectiveness > 1) {
+            effectMessage = "효과가 꽤 좋았다!";
+        } else if (typeEffectiveness === 1) {
+            effectMessage = "효과가 평범했다."; // 보통 효과일 때는 메시지 없음
+        } else if (typeEffectiveness > 0) {
+            effectMessage = "효과가 별로인 듯하다...";
+        } else if (typeEffectiveness === 0) {
+            effectMessage = "효과가 없는 듯하다...";
+            damage = 0;
+        }
+
+        return {
+            damage : Math.max(1, damage),
+            effectMessage : effectMessage
+        }; // 최소 1의 데미지는 보장
     }
 
     function calculateOtherDamage(index, move) {
@@ -465,7 +481,24 @@
         let damage = Math.floor(((2 * level / 5 + 2) * move.power * attack / defense / 50 + 2)
             * stab * typeEffectiveness * random);
 
-        return Math.max(1, damage); // 최소 1의 데미지는 보장
+        let effectMessage = "";
+        if (typeEffectiveness > 1.5) {
+            effectMessage = "효과가 굉장했다!";
+        } else if (typeEffectiveness > 1) {
+            effectMessage = "효과가 꽤 좋았다!";
+        } else if (typeEffectiveness === 1) {
+            effectMessage = "효과가 평범했다."; // 보통 효과일 때는 메시지 없음
+        } else if (typeEffectiveness > 0) {
+            effectMessage = "효과가 별로인 듯하다...";
+        } else if (typeEffectiveness === 0) {
+            effectMessage = "효과가 없는 듯하다...";
+            damage = 0;
+        }
+
+        return {
+            damage : Math.max(1, damage),
+            effectMessage : effectMessage
+        }; // 최소 1의 데미지는 보장
     }
 
     // 물리 타입인지 확인하는 함수 (간단한 구현)
@@ -512,10 +545,21 @@
             power: battleData[`my_skill${index}_power`],
             type: battleData[`my_skill${index}_type`]
         };
+        const accuracy = battleData[`my_skill${index}_accuracy`];
+        const hitRoll = Math.random() * 100;
+
+        if (hitRoll > accuracy) {
+            return {
+                success: false,
+                message: `${battleData.my_name}의 ${move.name} 공격이 빗나갔다!`
+            };
+        }
+
         const damage = calculateMyDamage(index, move);
         console.log(damage);
         // HP 감소
-        battleData.other_hp = Math.max(0, battleData.other_hp - damage);
+        battleData.other_hp = Math.max(0, battleData.other_hp - damage.damage);
+        return {message : damage.effectMessage}
     }
 
     function defendPokemon(index){
@@ -525,10 +569,21 @@
             type: battleData[`other_skill${index}_type`]
         };
 
+        const accuracy = battleData[`other_skill${index}_accuracy`];
+        const hitRoll = Math.random() * 100;
+
+        if (hitRoll > accuracy) {
+            return {
+                success: false,
+                message: `${battleData.other_name}의 ${move.name} 공격이 빗나갔다!`
+            };
+        }
+
         const damage = calculateOtherDamage(index, move);
         console.log(damage);
         // HP 감소
-        battleData.my_hp = Math.max(0, battleData.my_hp - damage);
+        battleData.my_hp = Math.max(0, battleData.my_hp - damage.damage);
+        return {message : damage.effectMessage}
     }
 
     const actionMenu = document.getElementById('action-menu');
@@ -572,10 +627,17 @@
 
         // **2. 공격 메시지 표시**
          // 기술 이름은 추후 선택 기능 추가 시 변경
-        message.textContent = `${battleData.my_name.toUpperCase()} used ${skill}`;
+        setTimeout(()=>{
+            message.textContent = `${battleData.my_name.toUpperCase()}의 ${skill}공격!`;
+        },0)
+
 
         // **3. 데미지 계산 (임시: 10 데미지)**
-        attackPokemon(parseInt(index)+1) // 상대 포켓몬 HP 감소
+        const attackResult = attackPokemon(parseInt(index)+1) // 상대 포켓몬 HP 감소
+
+        setTimeout(()=>{
+            message.textContent = attackResult.message;
+        },750)
 
         if (battleData.other_hp < 0) {
             battleData.other_hp = 0; // HP가 0 미만이 되지 않도록 보정
@@ -587,28 +649,40 @@
 
         // **5. 배틀 종료 판정 (HP 0 이하)**
         if (battleData.other_hp <= 0) {
-            message.textContent = `${battleData.other_name.toUpperCase()} fainted! ${battleData.my_name.toUpperCase()} won!`;
+            setTimeout(()=>{
+                message.textContent = `${battleData.other_name.toUpperCase()}이 쓰러졌다! ${battleData.my_name.toUpperCase()} 승리!`;
+            },1500);
             // (필요하다면) 승리 후 처리: 경험치 획득, 다음 전투 시작 등
         } else {
             // **6. 상대방 턴 시작 (일단 2초 후에 메시지만 표시)**
             setTimeout(() => {
                 let random = Math.floor(Math.random() * 4) + 1;
-                message.textContent = `${battleData.other_name.toUpperCase()} used ${battleData[`other_skill${random}_name`]}!`;
+                message.textContent = `${battleData.other_name.toUpperCase()}의 ${battleData[`other_skill${random}_name`]} 공격!`;
                 // 메시지 변경
-                defendPokemon(random)
+                const defendResult = defendPokemon(random);
                 animateOpponentPokemonAttack();
                 if (battleData.my_hp < 0) {
                     battleData.my_hp = 0; // HP가 0 미만이 되지 않도록 보정
                 }
+                setTimeout(()=>{
+                    message.textContent = defendResult.message;
 
+                },750)
                 updateMyHealthBar();
                 myHpValue.textContent = `${battleData.my_hp} / ${battleData.my_hp_max}`; // HP text 업데이트
 
                 if (battleData.my_hp <= 0) {
-                    message.textContent = `${battleData.my_name.toUpperCase()} fainted! ${battleData.other_name.toUpperCase()} won!`;
+                    setTimeout(()=>{
+                        message.textContent = `${battleData.my_name.toUpperCase()}이 쓰러졌다! ${battleData.other_name.toUpperCase()} 승리!`;
+                    },1500)
+
                 }
                 else{
-                    actionMenu.style.display = 'block';
+                    setTimeout(()=>{
+                        actionMenu.style.display = 'block';
+                        message.textContent = `${battleData.my_name}은 무엇을 할까?`;
+                    },1500)
+
                 }
 
             }, 1500); // 2초 후에 상대방 턴 시작 (실제 턴 기반 로직은 추후 구현)
@@ -766,11 +840,11 @@
         battleData.other_hp_max = battleData.other_hp; // HP 최대값 속성 추가
 
         // 시작 메시지
-        message.textContent = `Wild ${battleData.other_name.toUpperCase()} appeared!`;
+        message.textContent = `야생의 ${battleData.other_name.toUpperCase()} 포켓몬이 나타났다!`;
 
         // 3초 후 액션 메뉴 표시
         setTimeout(() => {
-            message.textContent = "What will you do?";
+            message.textContent = `${battleData.my_name}은 무엇을 할까?`;
             document.getElementById('action-menu').style.display = 'block';
         }, 2000);
     }
